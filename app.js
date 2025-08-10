@@ -11,6 +11,13 @@ require("./db/conn");
 const router = require("./routes/router");
 const products = require("./models/productsSchema");
 const jwt = require("jsonwebtoken");
+const cors = require("cors");
+
+app.use(cors({
+  origin: "http://localhost:3000", // frontend origin
+  credentials: true // allow cookies
+}));
+
 
 
 // middleware

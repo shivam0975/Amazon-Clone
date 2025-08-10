@@ -1,8 +1,23 @@
 const mongoose = require("mongoose");
+require("dotenv").config(); // Load .env variables
 
-const DB = process.env.DATABASE;
+// Get DB URI from environment variables
+const DB = process.env.MONGO_URI;
 
-mongoose.connect(DB,{
-    useUnifiedTopology:true,
-    useNewUrlParser:true
-}).then(()=>console.log("connection is successfully done")).catch((error)=>console.log("error hai" + error.message))
+if (!DB) {
+    console.error("❌ MONGO_URI is not defined in .env file");
+    process.exit(1);
+}
+
+// Connect to MongoDB
+mongoose.connect(DB, {
+    useUnifiedTopology: true,
+    useNewUrlParser: true
+})
+.then(() => console.log("✅ MongoDB connection successful"))
+.catch((error) => {
+    console.error("❌ MongoDB connection error:", error.message);
+    process.exit(1);
+});
+
+module.exports = mongoose;
