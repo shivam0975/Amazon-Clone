@@ -1,218 +1,149 @@
-const express = require("express");
-const router = new express.Router();
+const express = require('express');
+const router = express.Router();
 const products = require("../models/productsSchema");
 const User = require("../models/userSchema");
 const bcrypt = require("bcryptjs");
-const authenicate = require("../middleware/authenticate");
-
-// router.get("/",(req,res)=>{
-//     res.send("this is testing routes");
-// });
-
-
-// get the products data
+const authenticate = require("../middleware/authenticate");
 
 router.get("/getproducts", async (req, res) => {
-    try {
-        const producstdata = await products.find();
-        console.log(producstdata + "data mila hain");
-        res.status(201).json(producstdata);
-    } catch (error) {
-        console.log("error" + erroir.message);
-    }
+  try {
+    const producstdata = await products.find();
+    return res.status(200).json(producstdata);
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ error: "Server error" });
+  }
 });
 
-
-// register the data
 router.post("/register", async (req, res) => {
-    // console.log(req.body);
+  try {
     const { fname, email, mobile, password, cpassword } = req.body;
 
     if (!fname || !email || !mobile || !password || !cpassword) {
-        res.status(422).json({ error: "filll the all details" });
-        console.log("bhai nathi present badhi details");
-    };
-
-    try {
-
-        const preuser = await User.findOne({ email: email });
-
-        if (preuser) {
-            res.status(422).json({ error: "This email is already exist" });
-        } else if (password !== cpassword) {
-            res.status(422).json({ error: "password are not matching" });;
-        } else {
-
-            const finaluser = new User({
-                fname, email, mobile, password, cpassword
-            });
-
-            // yaha pe hasing krenge
-
-            const storedata = await finaluser.save();
-            // console.log(storedata + "user successfully added");
-            res.status(201).json(storedata);
-        }
-
-    } catch (error) {
-        console.log("error the bhai catch ma for registratoin time" + error.message);
-        res.status(422).send(error);
+      return res.status(422).json({ error: "Please fill all fields" });
     }
 
+    const preuser = await User.findOne({ email });
+    if (preuser) {
+      return res.status(422).json({ error: "Email already exists" });
+    }
+    if (password !== cpassword) {
+      return res.status(422).json({ error: "Passwords do not match" });
+    }
+
+    const finaluser = new User({ fname, email, mobile, password, cpassword });
+    const storedata = await finaluser.save();
+    return res.status(201).json(storedata);
+  } catch (error) {
+    console.error("register error", error.message);
+    return res.status(500).json({ error: "Server error" });
+  }
 });
 
-
-
-// login data
 router.post("/login", async (req, res) => {
-    // console.log(req.body);
+  try {
     const { email, password } = req.body;
-
     if (!email || !password) {
-        res.status(400).json({ error: "fill the details" });
+      return res.status(400).json({ error: "Please provide email and password" });
     }
 
-    try {
-
-        const userlogin = await User.findOne({ email: email });
-        console.log(userlogin);
-        if (userlogin) {
-            const isMatch = await bcrypt.compare(password, userlogin.password);
-            console.log(isMatch);
-
-
-
-            if (!isMatch) {
-                res.status(400).json({ error: "invalid crediential pass" });
-            } else {
-                
-                const token = await userlogin.generatAuthtoken();
-                console.log(token);
-
-                res.cookie("eccomerce", token, {
-                    expires: new Date(Date.now() + 2589000),
-                    httpOnly: true
-                });
-                res.status(201).json(userlogin);
-            }
-
-        } else {
-            res.status(400).json({ error: "user not exist" });
-        }
-
-    } catch (error) {
-        res.status(400).json({ error: "invalid crediential pass" });
-        console.log("error the bhai catch ma for login time" + error.message);
+    const userlogin = await User.findOne({ email });
+    if (!userlogin) {
+      return res.status(400).json({ error: "User does not exist" });
     }
+
+    const isMatch = await bcrypt.compare(password, userlogin.password);
+    if (!isMatch) {
+      return res.status(400).json({ error: "Invalid credentials" });
+    }
+
+    const token = await userlogin.generateAuthToken();
+
+    res.cookie("eccomerce", token, {
+      expires: new Date(Date.now() + 258900000),
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax'
+    });
+
+    return res.status(200).json(userlogin);
+  } catch (error) {
+    console.error("login error", error.message);
+    return res.status(500).json({ error: "Server error" });
+  }
 });
-
-// getindividual
 
 router.get("/getproductsone/:id", async (req, res) => {
-
-    try {
-        const { id } = req.params;
-        console.log(id);
-
-        const individual = await products.findOne({ id: id });
-        console.log(individual + "ind mila hai");
-
-        res.status(201).json(individual);
-    } catch (error) {
-        res.status(400).json(error);
-    }
+  try {
+    const { id } = req.params;
+    const individual = await products.findOne({ id });
+    if (!individual) return res.status(404).json({ error: "Product not found" });
+    return res.status(200).json(individual);
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ error: "Server error" });
+  }
 });
 
+router.post("/addcart/:id", authenticate, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const cartItem = await products.findOne({ id });
+    if (!cartItem) return res.status(404).json({ error: "Product not found" });
 
-// adding the data into cart
-router.post("/addcart/:id", authenicate, async (req, res) => {
+    const user = await User.findOne({ _id: req.userID });
+    if (!user) return res.status(404).json({ error: "User not found" });
 
-    try {
-        console.log("perfect 6");
-        const { id } = req.params;
-        const cart = await products.findOne({ id: id });
-        console.log(cart + "cart milta hain");
-
-        const Usercontact = await User.findOne({ _id: req.userID });
-        console.log(Usercontact + "user milta hain");
-
-
-        if (Usercontact) {
-            const cartData = await Usercontact.addcartdata(cart);
-
-            await Usercontact.save();
-            console.log(cartData + " thse save wait kr");
-            console.log(Usercontact + "userjode save");
-            res.status(201).json(Usercontact);
-        }
-    } catch (error) {
-        console.log(error);
-    }
+    await user.addcartdata(cartItem);
+    return res.status(200).json(user);
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ error: "Server error" });
+  }
 });
 
-
-// get data into the cart
-router.get("/cartdetails", authenicate, async (req, res) => {
-    try {
-        const buyuser = await User.findOne({ _id: req.userID });
-        console.log(buyuser + "user hain buy pr");
-        res.status(201).json(buyuser);
-    } catch (error) {
-        console.log(error + "error for buy now");
-    }
+router.get("/cartdetails", authenticate, async (req, res) => {
+  try {
+    const buyuser = await User.findOne({ _id: req.userID });
+    return res.status(200).json(buyuser);
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ error: "Server error" });
+  }
 });
 
-
-
-// get user is login or not
-router.get("/validuser", authenicate, async (req, res) => {
-    try {
-        const validuserone = await User.findOne({ _id: req.userID });
-        console.log(validuserone + "user hain home k header main pr");
-        res.status(201).json(validuserone);
-    } catch (error) {
-        console.log(error + "error for valid user");
-    }
+router.get("/validuser", authenticate, async (req, res) => {
+  try {
+    const validuserone = await User.findOne({ _id: req.userID });
+    return res.status(200).json(validuserone);
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ error: "Server error" });
+  }
 });
 
-// for userlogout
-
-router.get("/logout", authenicate, async (req, res) => {
-    try {
-        req.rootUser.tokens = req.rootUser.tokens.filter((curelem) => {
-            return curelem.token !== req.token
-        });
-
-        res.clearCookie("eccomerce", { path: "/" });
-        req.rootUser.save();
-        res.status(201).json(req.rootUser.tokens);
-        console.log("user logout");
-
-    } catch (error) {
-        console.log(error + "jwt provide then logout");
-    }
+router.get("/logout", authenticate, async (req, res) => {
+  try {
+    req.rootUser.tokens = req.rootUser.tokens.filter(curelem => curelem.token !== req.token);
+    await req.rootUser.save();
+    res.clearCookie('eccomerce', { path: '/' });
+    return res.status(200).json({ message: 'Logged out' });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ error: "Server error" });
+  }
 });
 
-// item remove ho rhi hain lekin api delete use krna batter hoga
-// remove iteam from the cart
-
-router.get("/remove/:id", authenicate, async (req, res) => {
-    try {
-        const { id } = req.params;
-
-        req.rootUser.carts = req.rootUser.carts.filter((curel) => {
-            return curel.id != id
-        });
-
-        req.rootUser.save();
-        res.status(201).json(req.rootUser);
-        console.log("iteam remove");
-
-    } catch (error) {
-        console.log(error + "jwt provide then remove");
-        res.status(400).json(error);
-    }
+router.get("/remove/:id", authenticate, async (req, res) => {
+  try {
+    const { id } = req.params;
+    req.rootUser.carts = req.rootUser.carts.filter(curel => curel.id !== id);
+    await req.rootUser.save();
+    return res.status(200).json(req.rootUser);
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ error: "Server error" });
+  }
 });
-
 
 module.exports = router;

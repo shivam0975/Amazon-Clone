@@ -1,34 +1,33 @@
-const mongoose = require("mongoose");
-mongoose.set('strictQuery', false);
+require('dotenv').config();
+const express = require('express');
+const cookieParser = require('cookie-parser');
+const cors = require('cors');
+const path = require('path');
 
-require("dotenv").config();
-const express = require("express");
+require('./db/conn');
+
 const app = express();
-const port = process.env.PORT || 5007;
-const cookieParser = require("cookie-parser");
-const DefaultData = require("./defaultdata");
-require("./db/conn");
-const router = require("./routes/router");
-const products = require("./models/productsSchema");
-const jwt = require("jsonwebtoken");
 
+const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3000';
 
-// middleware
+app.use(cors({
+  origin: ["http://localhost:3000", "https://amazon-clone-nx5d.onrender.com"],
+  credentials: true,
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
+
 app.use(express.json());
-app.use(cookieParser(""));
+app.use(cookieParser());
 
-app.use(router);
-// app.get("/",(req,res)=>{
-//     res.send("your server is running");
-// });
+const router = require('./routes/router');
+app.use('/', router);
 
-
-if(process.env.NODE_ENV == "production"){
-    app.use(express.static("client/build"));
+if (process.env.NODE_ENV === 'production') {
+  app.use(express.static(path.join(__dirname, 'client', 'build')));
+  app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, 'client', 'build', 'index.html'));
+  });
 }
 
-app.listen(port,()=>{
-    console.log(`your server is running on port ${port} `);
-});
-
-DefaultData();
+const PORT = process.env.PORT || 8000;
+app.listen(PORT, () => console.log(`Server started on port ${PORT}`));

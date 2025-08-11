@@ -1,29 +1,41 @@
-const jwt = require("jsonwebtoken");
-const User = require("../models/userSchema");
-const keysecret = process.env.KEY
+const jwt = require('jsonwebtoken');
+const User = require('../models/userSchema');
+require('dotenv').config();
 
-const authenicate = async(req,res,next)=>{
-    try {
-        const token = req.cookies.eccomerce;
-        
-        const verifyToken = jwt.verify(token,keysecret);
-     
-        const rootUser = await User.findOne({_id:verifyToken._id,"tokens.token":token});
-       
+const authenticate = async (req, res, next) => {
+  try {
 
-        if(!rootUser){ throw new Error("User Not Found") };
+    const tokenFromCookie = req.cookies?.eccomerce;
+    let token = tokenFromCookie;
 
-        req.token = token; 
-        req.rootUser = rootUser;   
-        req.userID = rootUser._id;   
-    
-        next();  
+    if (!token) {
+      const authHeader = req.header('Authorization') || '';
 
-
-    } catch (error) {
-        res.status(401).send("Unauthorized:No token provided");
-        console.log(error);
+      token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : authHeader;
     }
+
+    if (!token) {
+      return res.status(401).json({ error: 'No token provided' });
+    }
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    if (!decoded || !decoded._id) {
+      return res.status(401).json({ error: 'Invalid token' });
+    }
+
+    const rootUser = await User.findOne({ _id: decoded._id, 'tokens.token': token });
+    if (!rootUser) {
+      return res.status(401).json({ error: 'User not found for this token' });
+    }
+
+    req.token = token;
+    req.rootUser = rootUser;
+    req.userID = rootUser._id;
+    next();
+  } catch (err) {
+    console.error('authenticate error:', err.message);
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
 };
 
-module.exports = authenicate;
+module.exports = authenticate;
