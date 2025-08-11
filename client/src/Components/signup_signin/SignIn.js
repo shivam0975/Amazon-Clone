@@ -1,71 +1,46 @@
-import React, { useContext, useState } from 'react'
+import React, { useContext, useState } from 'react';
 import { NavLink } from 'react-router-dom';
 import { Logincontext } from '../context/Contextprovider';
 import { ToastContainer, toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
-
+import API_BASE from '../../config';
+import './signup.css'
 
 const SignIn = () => {
+  const { account, setAccount } = useContext(Logincontext);
+  const [logdata, setData] = useState({ email: '', password: '' });
 
-    const { account, setAccount } = useContext(Logincontext);
+  const adddata = (e) => {
+    const { name, value } = e.target;
+    setData(prev => ({ ...prev, [name]: value }));
+  };
 
-    const [logdata, setData] = useState({
-        email: "",
-        password: ""
-    });
+  const senddata = async (e) => {
+    e.preventDefault();
+    try {
+      const res = await fetch(`${API_BASE}/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include', // send/receive cookie
+        body: JSON.stringify(logdata)
+      });
 
-    // console.log(data);
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        toast.error(err?.error || 'Login failed', { position: 'top-center' });
+        return;
+      }
 
-    const adddata = (e) => {
-        const { name, value } = e.target;
-        // console.log(name, value);
+      const data = await res.json();
+      setAccount(data);
+      setData({ email: '', password: '' });
+      toast.success('Login Successfully done 😃!', { position: 'top-center' });
+    } catch (error) {
+      console.error('login error', error);
+      toast.error('Network error', { position: 'top-center' });
+    }
+  };
 
-        setData((pre) => {
-            return {
-                ...pre,
-                [name]: value
-            }
-        })
-    };
-
-    const senddata = async (e) => {
-        e.preventDefault();
-
-        const { email, password } = logdata;
-        // console.log(email);
-        try {
-            const res = await fetch("https://amazon-clone-backend-p4ol.onrender.com/login", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({
-                    email, password
-                })
-            });
-
-
-            const data = await res.json();
-            // console.log(data);
-
-            if (res.status === 400 || !data) {
-                console.log("invalid details");
-                toast.error("Invalid Details 👎!", {
-                    position: "top-center"
-                });
-            } else {
-                setAccount(data);
-                setData({ ...logdata, email: "", password: "" })
-                toast.success("Login Successfully done 😃!", {
-                    position: "top-center"
-                });
-            }
-        } catch (error) {
-            console.log("login page ka error" + error.message);
-        }
-    };
-
-    return (
+  return (
         <section>
             <div className="sign_container">
                 <div className="sign_header">
@@ -101,6 +76,6 @@ const SignIn = () => {
 
         </section>
     )
-}
+};
 
-export default SignIn
+export default SignIn;

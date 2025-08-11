@@ -1,17 +1,15 @@
+import API_BASE from '../../../config';
 
-export const getProducts = ()=> async(dispatch)=>{
-    try {
-        const data = await fetch("https://amazon-clone-backend-p4ol.onrender.com/getproducts",{
-                method:"GET",
-                headers:{
-                    "Content-Type":"application/json"
-                }
-        });
-
-        const res = await data.json();
-        // console.log(res);
-        dispatch({type:"SUCCESS_GET_PRODUCTS",payload:res});
-    } catch (error) {
-        dispatch({type:"FAIL_GET_PRODUCTS",payload:error.response});
-    }
-}
+export const getProducts = () => async (dispatch) => {
+  try {
+    const data = await fetch(`${API_BASE}/getproducts`, {
+      method: "GET",
+      headers: { "Content-Type": "application/json" },
+    });
+    if (!data.ok) throw new Error('Failed to fetch products');
+    const res = await data.json();
+    dispatch({ type: "SUCCESS_GET_PRODUCTS", payload: res });
+  } catch (error) {
+    dispatch({ type: "FAIL_GET_PRODUCTS", payload: error.message });
+  }
+};

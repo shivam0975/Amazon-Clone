@@ -1,71 +1,44 @@
-import { Divider } from '@mui/material';
-import React, { useState } from 'react'
+import React, { useState } from 'react';
 import { NavLink } from 'react-router-dom';
-import "./signup.css";
+import './signup.css'
+import { Divider } from '@mui/material';
 import { ToastContainer, toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import API_BASE from '../../config';
 
 const Signup = () => {
+  const [udata, setUdata] = useState({ fname: '', email: '', mobile: '', password: '', cpassword: '' });
 
-    const [udata, setUdata] = useState({
-        fname: "",
-        email: "",
-        mobile: "",
-        password: "",
-        cpassword: ""
-    });
+  const adddata = (e) => {
+    const { name, value } = e.target;
+    setUdata(prev => ({ ...prev, [name]: value }));
+  };
 
-    // console.log(udata);
+  const senddata = async (e) => {
+    e.preventDefault();
+    try {
+      const res = await fetch(`${API_BASE}/register`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(udata)
+      });
 
-    const adddata = (e) => {
-        const { name, value } = e.target;
-        // console.log(name,value);
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        toast.error(err?.error || 'Registration failed', { position: 'top-center' });
+        return;
+      }
 
-        setUdata((pre) => {
-            return {
-                ...pre,
-                [name]: value
-            }
-        })
-    };
-
-    const senddata = async (e) => {
-        e.preventDefault();
-
-        const { fname, email, mobile, password, cpassword } = udata;
-        try {
-            const res = await fetch("https://amazon-clone-backend-p4ol.onrender.com/register", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({
-                    fname, email, mobile, password, cpassword
-                })
-            });
-
-            const data = await res.json();
-            // console.log(data);
-
-            if (res.status === 422 || !data) {
-                toast.error("Invalid Details 👎!", {
-                    position: "top-center"
-                });
-            } else {
-                setUdata({
-                    ...udata, fname: "", email: "",
-                    mobile: "", password: "", cpassword: ""
-                });
-                toast.success("Registration Successfully done 😃!", {
-                    position: "top-center"
-                });
-            }
-        } catch (error) {
-            console.log("front end ka catch error hai" + error.message);
-        }
+      const data = await res.json();
+      setUdata({ fname: '', email: '', mobile: '', password: '', cpassword: '' });
+      toast.success('Registration Successfully done 😃!', { position: 'top-center' });
+    } catch (error) {
+      console.error('signup error', error);
+      toast.error('Network error', { position: 'top-center' });
     }
+  };
 
-    return (
+  return (
         <section>
             <div className="sign_container">
                 <div className="sign_header">
@@ -122,7 +95,7 @@ const Signup = () => {
                 <ToastContainer />
             </div>
         </section>
-    )
-}
+    );
+};
 
 export default Signup;
