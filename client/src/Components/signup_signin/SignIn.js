@@ -34,7 +34,7 @@ const SignIn = () => {
         const { email, password } = logdata;
         // console.log(email);
         try {
-            const res = await fetch("/login", {
+            const res = await fetch("https://amazon-clone-backend-p4ol.onrender.com/login", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json"
