@@ -1,6 +1,7 @@
 import React, { useContext } from 'react'
 import { Logincontext } from '../context/Contextprovider';
 import { ToastContainer, toast } from 'react-toastify';
+import API_BASE from '../../config';
 import 'react-toastify/dist/ReactToastify.css';
 
 
@@ -12,7 +13,7 @@ const Option = ({ deletedata, get }) => {
 
     const removedata = async (id) => {
         try {
-            const res = await fetch(`https://amazon-clone-backend-p4ol.onrender.com/remove/${id}`, {
+            const res = await fetch(`${API_BASE}/remove/${id}`, {
                 method: "GET",
                 headers: {
                     Accept: "application/json",

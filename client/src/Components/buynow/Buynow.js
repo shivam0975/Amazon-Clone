@@ -5,6 +5,8 @@ import Empty from './Empty';
 import Option from './Option';
 import Right from './Right';
 import Subtotal from './Subtotal';
+import API_BASE from '../../config';
+
 
 const Buynow = () => {
 
@@ -12,7 +14,7 @@ const Buynow = () => {
     // console.log(cartdata.length);
 
     const getdatabuy = async () => {
-        const res = await fetch("${API_BASE}/cartdetails", {
+        const res = await fetch(`${API_BASE}/cartdetails`, {
             method: "GET",
             headers: {
                 Accept:"application/json",

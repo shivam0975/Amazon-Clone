@@ -40,7 +40,7 @@ const Navbaar = () => {
 
   const getdetailsvaliduser = async () => {
     try {
-      const res = await fetch(`${API_BASE_URL}/validuser`, { method: 'GET', credentials: 'include' });
+      const res = await fetch(`${API_BASE}/validuser`, { method: 'GET', credentials: 'include' });
       if (!res.ok) return; // not logged in, quietly ignore
       const data = await res.json();
       setAccount(data);
@@ -55,7 +55,7 @@ const Navbaar = () => {
 
   const logoutuser = async () => {
     try {
-      const res = await fetch(`${API_BASE_URL}/logout`, { method: 'GET', credentials: 'include' });
+      const res = await fetch(`${API_BASE}/logout`, { method: 'GET', credentials: 'include' });
       if (!res.ok) throw new Error('Logout failed');
       setAccount(null);
       setOpen(null);

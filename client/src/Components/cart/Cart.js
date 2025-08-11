@@ -1,6 +1,7 @@
 import React, { useContext, useEffect, useState } from 'react'
 import "./cart.css";
 import { products } from '../home/productdata';
+import API_BASE from '../../config';
 import { Divider } from '@mui/material';
 import { useHistory, useParams } from 'react-router';
 import CircularProgress from '@mui/material/CircularProgress';
@@ -23,7 +24,7 @@ const Cart = () => {
     // console.log([inddata]);
 
     const getinddata = async () => {
-        const res = await fetch(`https://amazon-clone-backend-p4ol.onrender.com/getproductsone/${id}`, {
+        const res = await fetch(`${API_BASE}/getproductsone/${id}`, {
             method: "GET",
             headers: {
                 Accept: "application/json",
@@ -49,7 +50,7 @@ const Cart = () => {
 
     const addtocart = async (id) => {
         console.log(id);
-        const check = await fetch(`https://amazon-clone-backend-p4ol.onrender.com/addcart/${id}`, {
+        const check = await fetch(`${API_BASE}/addcart/${id}`, {
             method: "POST",
             headers: {
                 Accept: "application/json",
