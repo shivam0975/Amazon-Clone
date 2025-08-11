@@ -2,7 +2,7 @@ import API_BASE from '../../../config';
 
 export const getProducts = () => async (dispatch) => {
   try {
-    const data = await fetch(`${API_BASE}/getproducts`, {
+    const data = await fetch(`${API_BASE_URL}/getproducts`, {
       method: "GET",
       headers: { "Content-Type": "application/json" },
     });
